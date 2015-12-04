@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<title>Top5 Voter</title>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="main.css">
+	</head>
+	<body>
+		<div id="app"></div>
+
+		<!-- React JS -->
+		<script src="https://fb.me/react-0.13.3.js"></script>
+		<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+
+		<!-- Firebase -->
+		<script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
+		<script type="text/jsx">
+
+			var TrackItem = React.createClass({
+				render: function () {
+					return (
+						<li>
+							<img src={ this.props.track.art } alt={ this.props.track.track } height="300" width="300"/>
+							<h4><a href={ this.props.track.link }>{ this.props.track.track }</a></h4>
+							<p>{ this.props.track.artist }</p>
+							<p><small>Added by <span>{ this.props.track.user }</span> on <span>{ this.props.track.added }</span></small></p>
+							<p><button onClick={ this.props.addLike.bind(null, this.props.track['.key']) }><i className="fa fa-heart"></i> { this.props.track.likes }</button></p>
+						</li>
+					);
+				}
+			});
+
+			var Top5Voter = React.createClass({
+				getInitialState: function () {
+					return {
+						tracks: []
+					}
+				},
+
+				componentWillMount: function () {
+					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
+					this.firebaseRef.on('value', function(snapshot) {
+						var items = [];
+						snapshot.forEach(function(childSnapshot) {
+							var item = childSnapshot.val();
+							item['.key'] = childSnapshot.key();
+
+							//item['localLiked'] = localStorage.getItem(item['.key']);
+
+							console.log(item);
+					        items.push(item);
+						}.bind(this));
+
+						this.setState({
+							tracks: items
+						});
+					}.bind(this));
+				},
+
+				componentWillUnmount: function() {
+					this.firebaseRef.off();
+				},
+
+				toggleLike: function (key) {
+
+					siteLikesRef = this.firebaseRef.child(key + '/likes');
+					siteLikesRef.transaction(function (current_value) {
+						var likes = current_value || 0;
+
+						likes++;
+
+						return likes;
+					});
+				},
+
+				render: function () {
+					var _this = this;
+					var createTrack = function (track, index) {
+						return (
+							<TrackItem 
+								key={ index }
+								track = { track }
+								addLike={ _this.toggleLike }
+							/>
+						);
+					}
+					return <ul>{ this.state.tracks.map(createTrack) }</ul>;
+				}
+			});
+
+			React.render(<Top5Voter />, document.getElementById('app'));
+		</script>
+	</body>
+</html>
