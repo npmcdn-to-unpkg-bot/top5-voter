@@ -5,10 +5,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 		<title>Top5 Voter</title>
 		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-		<link rel="stylesheet" type="text/css" href="main.css">
+		<link rel="stylesheet" type="text/css" href="css/style.css">
 	</head>
 	<body>
-		<div id="app"></div>
+		<div class="wrap">
+			<h1>Top 5 Voter</h1>
+			<div id="app"></div>
+		</div>
 
 		<!-- React JS -->
 		<script src="https://fb.me/react-0.13.3.js"></script>
@@ -21,16 +24,18 @@
 			var TrackItem = React.createClass({
 				render: function () {
 					return (
-						<li>
+						<li className="track">
 							<img src={ this.props.track.art } alt={ this.props.track.track } height="300" width="300"/>
-							<h4><a href={ this.props.track.link }>{ this.props.track.track }</a></h4>
-							<p>{ this.props.track.artist }</p>
-							<p><small>Added by <span>{ this.props.track.user }</span> on <span>{ this.props.track.added }</span></small></p>
-							<button 
-								className={ this.props.track.localLiked ? 'liked' : '' }
-								onClick={ this.props.addLike.bind(null, this.props.track['.key']) }>
-								<i className="fa fa-heart"></i>{ this.props.track.likes > 0 ? ' ' + this.props.track.likes : ''  }
-							</button>
+							<div className="track-content">
+								<h4><a href={ this.props.track.link }>{ this.props.track.track }</a></h4>
+								<p>{ this.props.track.artist }</p>
+								<p><small>Added by <span>{ this.props.track.user }</span> on <span>{ this.props.track.added }</span></small></p>
+								<button 
+									className={ this.props.track.localLiked ? 'liked' : '' }
+									onClick={ this.props.addLike.bind(null, this.props.track['.key']) }>
+									<i className="fa fa-heart"></i>{ this.props.track.likes > 0 ? ' ' + this.props.track.likes : ''  }
+								</button>
+							</div>
 						</li>
 					);
 				}
@@ -45,7 +50,7 @@
 
 				componentWillMount: function () {
 					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
-					this.firebaseRef.on('value', function(snapshot) {
+					this.firebaseRef.limitToFirst(20).on('value', function(snapshot) {
 						var items = [];
 						snapshot.forEach(function(childSnapshot) {
 							var item = childSnapshot.val();
@@ -101,7 +106,7 @@
 							/>
 						);
 					}
-					return <ul>{ this.state.tracks.map(createTrack) }</ul>;
+					return <ul className="tracklist">{ this.state.tracks.map(createTrack) }</ul>;
 				}
 			});
 

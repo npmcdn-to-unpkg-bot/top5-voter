@@ -1,0 +1,35 @@
+.tracklist {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+.track {
+	@include clearfix;
+	display: flex;
+	padding-bottom: 1em;
+
+	img {
+		flex: 0 auto;
+		padding-right: 1em;
+		width: 100px;
+		height: 100px;
+	}
+}
+
+.track-content {
+	position: relative;
+	flex-grow: 1;
+
+	button {
+		position: absolute;
+		top: 0;
+		right: 0;
+		background: none;
+		border: none;
+
+		&.liked {
+			color: red;
+		}
+	}
+}

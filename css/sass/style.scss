@@ -1,0 +1,13 @@
+@import "mixins";
+
+@import "normalize";
+
+@import "tracklist";
+
+.wrap {
+	padding: 1em;
+}
+
+#app {
+	width: 50%;
+}
