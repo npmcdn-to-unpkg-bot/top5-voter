@@ -1,8 +1,26 @@
 @import "mixins";
 
+@import "settings";
+
 @import "normalize";
 
 @import "tracklist";
+
+body {
+	background: $body-background;
+	color: $body-color;
+}
+
+a {
+	color: $link-color;
+	text-decoration: none;
+
+	&:hover,
+	&:active,
+	&:focus {
+		color: $link-hover;
+	}
+}
 
 .wrap {
 	padding: 1em;
@@ -10,4 +28,31 @@
 
 #app {
 	width: 50%;
+}
+
+.app-title {
+	text-align: center;
+}
+
+.nav {
+	display: flex;
+	justify-content: space-around;
+	list-style-type: none;
+	margin: 0;
+	padding: 2em 0;
+
+	li {
+		display: inline-block;
+
+		a {
+			display: inline-block;
+			padding: 0.5em 1em;
+		}
+		
+
+		a.active {
+			background: $link-color;
+			color: $body-background;
+		}
+	}
 }

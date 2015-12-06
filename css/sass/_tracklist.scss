@@ -21,15 +21,35 @@
 	position: relative;
 	flex-grow: 1;
 
-	button {
+	p {
+		margin-top: 0;
+	}
+
+	button,
+	.button {
 		position: absolute;
 		top: 0;
 		right: 0;
 		background: none;
 		border: none;
+		color: $body-color;
 
-		&.liked {
-			color: red;
+		&.liked,
+		&:hover,
+		&:focus,
+		&:active {
+			color: $like-color;
+			outline: none;
 		}
 	}
+}
+
+.track-title,
+.track-artist {
+	margin-top: 0;
+	line-height: 1.5;
+}
+
+.track-title {
+	margin-bottom: 0;
 }

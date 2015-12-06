@@ -355,17 +355,61 @@ td, th {
   -webkit-flex-grow: 1;
   -ms-flex-positive: 1;
   flex-grow: 1; }
-  .track-content button {
+  .track-content p {
+    margin-top: 0; }
+  .track-content button, .track-content .button {
     position: absolute;
     top: 0;
     right: 0;
     background: none;
-    border: none; }
-    .track-content button.liked {
-      color: red; }
+    border: none;
+    color: #403F3F; }
+    .track-content button.liked, .track-content button:hover, .track-content button:focus, .track-content button:active, .track-content .button.liked, .track-content .button:hover, .track-content .button:focus, .track-content .button:active {
+      color: #EB586F;
+      outline: none; }
+
+.track-title, .track-artist {
+  margin-top: 0;
+  line-height: 1.5; }
+
+.track-title {
+  margin-bottom: 0; }
+
+body {
+  background: #EEE;
+  color: #403F3F; }
+
+a {
+  color: #60BEB3;
+  text-decoration: none; }
+  a:hover, a:active, a:focus {
+    color: #84cdc3; }
 
 .wrap {
   padding: 1em; }
 
 #app {
   width: 50%; }
+
+.app-title {
+  text-align: center; }
+
+.nav {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-justify-content: space-around;
+  -ms-flex-pack: distribute;
+  justify-content: space-around;
+  list-style-type: none;
+  margin: 0;
+  padding: 2em 0; }
+  .nav li {
+    display: inline-block; }
+    .nav li a {
+      display: inline-block;
+      padding: 0.5em 1em; }
+    .nav li a.active {
+      background: #60BEB3;
+      color: #EEE; }

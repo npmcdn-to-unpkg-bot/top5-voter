@@ -9,13 +9,14 @@
 	</head>
 	<body>
 		<div class="wrap">
-			<h1>Top 5 Voter</h1>
 			<div id="app"></div>
 		</div>
 
 		<!-- React JS -->
 		<script src="https://fb.me/react-0.13.3.js"></script>
 		<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+
+		<script src="https://npmcdn.com/react-router/umd/ReactRouter.min.js"></script>
 
 		<!-- Firebase -->
 		<script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
@@ -25,10 +26,10 @@
 				render: function () {
 					return (
 						<li className="track">
-							<img src={ this.props.track.art } alt={ this.props.track.track } height="300" width="300"/>
+							<img src={ this.props.track.art } alt={ this.props.track.track } />
 							<div className="track-content">
-								<h4><a href={ this.props.track.link }>{ this.props.track.track }</a></h4>
-								<p>{ this.props.track.artist }</p>
+								<h4 className="track-title"><a href={ this.props.track.link } target="_blank">{ this.props.track.track }</a></h4>
+								<h5 className="track-artist">{ this.props.track.artist }</h5>
 								<p><small>Added by <span>{ this.props.track.user }</span> on <span>{ this.props.track.added }</span></small></p>
 								<button 
 									className={ this.props.track.localLiked ? 'liked' : '' }
@@ -41,7 +42,7 @@
 				}
 			});
 
-			var Top5Voter = React.createClass({
+			var TrackList = React.createClass({
 				getInitialState: function () {
 					return {
 						tracks: []
@@ -49,9 +50,9 @@
 				},
 
 				componentWillMount: function () {
-					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
-					this.firebaseRef.limitToFirst(20).on('value', function(snapshot) {
+					var addTracksToList = function(snapshot) {
 						var items = [];
+
 						snapshot.forEach(function(childSnapshot) {
 							var item = childSnapshot.val();
 
@@ -64,10 +65,23 @@
 					        items.push(item);
 						}.bind(this));
 
+						items.reverse();
+
 						this.setState({
 							tracks: items
 						});
-					}.bind(this));
+					};
+
+					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
+
+					if (this.props.type == 'recent') {
+						this.firebaseRef.limitToLast(20).on('value', addTracksToList.bind(this));	
+					}
+
+					if (this.props.type == 'popular') {
+						this.firebaseRef.orderByChild("likes").limitToLast(20).on('value', addTracksToList.bind(this));	
+					}
+					
 				},
 
 				componentWillUnmount: function() {
@@ -110,7 +124,46 @@
 				}
 			});
 
-			React.render(<Top5Voter />, document.getElementById('app'));
+			function buildTrackList (type) {
+				return React.createClass({
+					render: function () {
+						return (<TrackList {...this.props} type={type} />)
+					}
+				});
+			}
+
+			var Popular = buildTrackList('popular');
+			var Recent = buildTrackList('recent');
+
+			var App = React.createClass({
+				render: function () {
+					return (
+						<div>
+							<h1 className="app-title">Top 5 Voter</h1>
+							<ul className="nav">
+								<li><Link to="/recent" activeClassName="active">Recent</Link></li>
+								<li><Link to="/popular" activeClassName="active">Popular</Link></li>
+							</ul>
+							{ this.props.children }
+						</div>
+					);
+				}
+			});
+
+			var Router = window.ReactRouter.Router;
+			var Route = window.ReactRouter.Route;
+			var IndexRoute = window.ReactRouter.IndexRoute;
+			var Link = window.ReactRouter.Link;
+
+			React.render((
+				<Router>
+					<Route path="/" component={App}>
+						<IndexRoute component={Recent} />
+						<Route path="recent" component={Recent} />
+						<Route path="popular" component={Popular} />
+					</Route>
+				</Router>
+			), document.getElementById('app'));
 		</script>
 	</body>
 </html>
