@@ -26,8 +26,10 @@ a {
 	padding: 1em;
 }
 
-#app {
-	width: 50%;
+@media screen and (min-width: 48em) {
+	#app {
+		width: 50%;
+	}
 }
 
 .app-title {
@@ -55,4 +57,13 @@ a {
 			color: $body-background;
 		}
 	}
+}
+
+.more-button {
+	display: block;
+	margin: 0 auto;
+	padding: 0.5em 1em;
+	background: $link-color;
+	color: $body-background;
+	border: none;
 }

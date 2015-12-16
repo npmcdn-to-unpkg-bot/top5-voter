@@ -388,8 +388,9 @@ a {
 .wrap {
   padding: 1em; }
 
-#app {
-  width: 50%; }
+@media screen and (min-width: 48em) {
+  #app {
+    width: 50%; } }
 
 .app-title {
   text-align: center; }
@@ -413,3 +414,11 @@ a {
     .nav li a.active {
       background: #60BEB3;
       color: #EEE; }
+
+.more-button {
+  display: block;
+  margin: 0 auto;
+  padding: 0.5em 1em;
+  background: #60BEB3;
+  color: #EEE;
+  border: none; }

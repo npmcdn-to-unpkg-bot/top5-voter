@@ -45,11 +45,21 @@
 			var TrackList = React.createClass({
 				getInitialState: function () {
 					return {
+						tracksPerPage: 20,
+						totalTracks: 20,
 						tracks: []
 					}
 				},
 
 				componentWillMount: function () {
+					this.getTrackList();
+				},
+
+				componentWillUnmount: function() {
+					this.firebaseRef.off();
+				},
+
+				getTrackList: function () {
 					var addTracksToList = function(snapshot) {
 						var items = [];
 
@@ -63,6 +73,7 @@
 							item['localLiked'] = localStorage.getItem(key) ? true : false;
 
 					        items.push(item);
+
 						}.bind(this));
 
 						items.reverse();
@@ -75,17 +86,12 @@
 					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
 
 					if (this.props.type == 'recent') {
-						this.firebaseRef.limitToLast(20).on('value', addTracksToList.bind(this));	
+						this.firebaseRef.limitToLast(this.state.totalTracks).on('value', addTracksToList.bind(this));	
 					}
 
 					if (this.props.type == 'popular') {
-						this.firebaseRef.orderByChild("likes").limitToLast(20).on('value', addTracksToList.bind(this));	
+						this.firebaseRef.orderByChild("likes").limitToLast(this.state.totalTracks).on('value', addTracksToList.bind(this));	
 					}
-					
-				},
-
-				componentWillUnmount: function() {
-					this.firebaseRef.off();
 				},
 
 				toggleLike: function (key) {
@@ -109,6 +115,14 @@
 					});
 				},
 
+				loadMore: function () {
+					this.setState(function(previousState, currentProps) {
+						return {
+							totalTracks: previousState.totalTracks + previousState.tracksPerPage
+						};
+					}, this.getTrackList);
+				},
+
 				render: function () {
 					var _this = this;
 					var createTrack = function (track, index) {
@@ -120,7 +134,12 @@
 							/>
 						);
 					}
-					return <ul className="tracklist">{ this.state.tracks.map(createTrack) }</ul>;
+					return (
+						<div>
+							<ul className="tracklist">{ this.state.tracks.map(createTrack) }</ul>
+							<button className="more-button" onClick={ this.loadMore }>More</button>
+						</div>
+					);
 				}
 			});
 
