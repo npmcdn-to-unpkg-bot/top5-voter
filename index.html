@@ -29,8 +29,8 @@
 							<img src={ this.props.track.art } alt={ this.props.track.track } />
 							<div className="track-content">
 								<h4 className="track-title"><a href={ this.props.track.link } target="_blank">{ this.props.track.track }</a></h4>
-								<h5 className="track-artist">{ this.props.track.artist }</h5>
-								<p><small>Added by <span>{ this.props.track.user }</span> on <span>{ this.props.track.added }</span></small></p>
+								<h5 className="track-artist"><Link to={ '/artist/' + this.props.track.artist.split(' ').join('-') } >{ this.props.track.artist }</Link></h5>
+								<p><small>Added by <Link to={ '/user/' + this.props.track.user.split(' ').join('-') } >{ this.props.track.user }</Link> on <span>{ this.props.track.added }</span></small></p>
 								<button 
 									className={ this.props.track.localLiked ? 'liked' : '' }
 									onClick={ this.props.addLike.bind(null, this.props.track['.key']) }>
@@ -60,43 +60,66 @@
 				},
 
 				getTrackList: function () {
-					var addTracksToList = function(snapshot) {
-						var items = [];
-
-						snapshot.forEach(function(childSnapshot) {
-							var item = childSnapshot.val();
-
-							var key = childSnapshot.key();
-							
-							item['.key'] = key;
-
-							item['localLiked'] = localStorage.getItem(key) ? true : false;
-
-					        items.push(item);
-
-						}.bind(this));
-
-						items.reverse();
-
-						this.setState({
-							tracks: items
-						});
-					};
-
 					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
 
 					if (this.props.type == 'recent') {
-						this.firebaseRef.limitToLast(this.state.totalTracks).on('value', addTracksToList.bind(this));	
+						this.firebaseRef.limitToLast(this.state.totalTracks).on('value', this.addTracksToList);	
 					}
 
 					if (this.props.type == 'popular') {
-						this.firebaseRef.orderByChild("likes").limitToLast(this.state.totalTracks).on('value', addTracksToList.bind(this));	
+						this.firebaseRef.orderByChild("likes").limitToLast(this.state.totalTracks).on('value', this.addTracksToList);	
 					}
+
+					if (this.props.type == 'user') {
+						var user = this.props.params.userId.split('-').join(' ');
+
+						this.firebaseRef
+							.orderByChild("user")
+							.equalTo(user)
+							.limitToLast(this.state.totalTracks)
+							.on('value', this.addTracksToList);	
+					}
+
+					if (this.props.type == 'artist') {
+						var artist = this.props.params.artist.split('-').join(' ');
+
+						this.firebaseRef
+							.orderByChild('artist')
+							.equalTo(artist)
+							.on('value', this.addTracksToList);	
+					}
+				},
+
+				// Firebase callback. Adds returned items to state's track array.
+				addTracksToList: function(snapshot) {
+
+					var items = [];
+
+					snapshot.forEach(function(childSnapshot) {
+						var item = childSnapshot.val();
+
+						var key = childSnapshot.key();
+						
+						item['.key'] = key;
+
+						item['localLiked'] = localStorage.getItem(key) ? true : false;
+
+				        items.push(item);
+
+					}.bind(this));
+
+					items.reverse();
+
+					this.setState(function (prevState) {
+						return {
+							tracks: items
+						}
+					});
 				},
 
 				toggleLike: function (key) {
 
-					siteLikesRef = this.firebaseRef.child(key + '/likes');
+					siteLikesRef = new Firebase('https://top5voter.firebaseio.com/tracks/' + key + '/likes');
 					siteLikesRef.transaction(function (current_value) {
 						var likes = current_value || 0;
 
@@ -116,7 +139,9 @@
 				},
 
 				loadMore: function () {
-					this.setState(function(previousState, currentProps) {
+					this.firebaseRef.off();
+
+					this.setState(function (previousState, currentProps) {
 						return {
 							totalTracks: previousState.totalTracks + previousState.tracksPerPage
 						};
@@ -153,6 +178,8 @@
 
 			var Popular = buildTrackList('popular');
 			var Recent = buildTrackList('recent');
+			var UserList = buildTrackList('user');
+			var ArtistList = buildTrackList('artist');
 
 			var App = React.createClass({
 				render: function () {
@@ -180,6 +207,8 @@
 						<IndexRoute component={Recent} />
 						<Route path="recent" component={Recent} />
 						<Route path="popular" component={Popular} />
+						<Route path="user/:userId" component={UserList} />
+						<Route path="artist/:artist" component={ArtistList} />
 					</Route>
 				</Router>
 			), document.getElementById('app'));
