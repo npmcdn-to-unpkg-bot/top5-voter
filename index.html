@@ -88,6 +88,37 @@
 							.equalTo(artist)
 							.on('value', this.addTracksToList);	
 					}
+
+					// Get all tracks saved locally
+					if (this.props.type == 'saved') {
+						var _this = this;
+
+						this.setState({
+							tracks: []
+						});
+
+						// Lookup all localstorage keys
+						for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+							var key = localStorage.key(i),
+								value = localStorage.getItem(key);
+
+							if (value === 'true') {
+								var trackRef = this.firebaseRef.child(key);
+
+								trackRef.once('value', function(snap) {
+									var item = snap.val();
+								
+									item['.key'] = snap.key();
+
+									item['localLiked'] = true;
+
+									_this.setState(function(oldState) {
+										return oldState.tracks.push(item);
+									});
+								});
+							}
+						}
+					}
 				},
 
 				// Firebase callback. Adds returned items to state's track array.
@@ -118,23 +149,48 @@
 				},
 
 				toggleLike: function (key) {
+					var _this = this,
+						updateAmt = 0,
+						localLiked = localStorage.getItem(key) ? true : false
+
+					if (localLiked) {
+						updateAmt--;
+					} else {
+						updateAmt++;
+					}
 
 					siteLikesRef = new Firebase('https://top5voter.firebaseio.com/tracks/' + key + '/likes');
+
 					siteLikesRef.transaction(function (current_value) {
 						var likes = current_value || 0;
-
-						var localLiked = localStorage.getItem(key) ? true : false;
-
-						if (localLiked) {
-							likes--;
-							localStorage.removeItem(key);
+						return likes + updateAmt;
+					},
+					function(error, committed, snapshot) {
+						if (error) {
+							console.log('Transaction failed abnormally!', error);
+						} else if (!committed) {
+							console.log('No update');
 						} else {
-							likes++;
-							localStorage.setItem(key, true);
-						}
-						
+							// Update successful
+							if (localLiked) {
+								localStorage.removeItem(key);
 
-						return likes;
+								// if we're looking at local saves, manually remove track from state because we're not listening to Firebase
+								if (_this.props.type == 'saved') {
+									_this.setState(function(oldState) {
+										for (var i = oldState.tracks.length - 1; i >= 0; i--) {
+											if (oldState.tracks[i]['.key'] === key) {
+												oldState.tracks.splice(i, 1);
+											}
+										};
+
+										return oldState.tracks;
+									});
+								}
+							} else {
+								localStorage.setItem(key, true);
+							}
+						}
 					});
 				},
 
@@ -178,6 +234,7 @@
 
 			var Popular = buildTrackList('popular');
 			var Recent = buildTrackList('recent');
+			var Saved = buildTrackList('saved');
 			var UserList = buildTrackList('user');
 			var ArtistList = buildTrackList('artist');
 
@@ -189,6 +246,7 @@
 							<ul className="nav">
 								<li><Link to="/recent" activeClassName="active">Recent</Link></li>
 								<li><Link to="/popular" activeClassName="active">Popular</Link></li>
+								<li><Link to="/saved" activeClassName="active">Saved</Link></li>
 							</ul>
 							{ this.props.children }
 						</div>
@@ -207,6 +265,7 @@
 						<IndexRoute component={Recent} />
 						<Route path="recent" component={Recent} />
 						<Route path="popular" component={Popular} />
+						<Route path="Saved" component={Saved} />
 						<Route path="user/:userId" component={UserList} />
 						<Route path="artist/:artist" component={ArtistList} />
 					</Route>
