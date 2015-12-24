@@ -22,6 +22,25 @@
 		<script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
 		<script type="text/jsx">
 
+			// Load more tracks button component
+			var LoadMoreButton = React.createClass({
+				render: function () {
+					var content = '';
+
+					// Only show the button if there are tracks and the number of tracks mod the number
+					// of tracks per page is not 0. If there is a remainder that means we've loaded all
+					// the tracks
+					if (this.props.numItems === 0 || this.props.numItems % this.props.itemsPerPage !== 0) {
+						content = <p>End of the line</p>;
+					} else {
+						content = <button className="more-button" onClick={ this.props.loadMore }>More</button>;
+					}
+
+					return <div>{ content }</div>;
+				}
+			});
+
+			// Component for individual track item
 			var TrackItem = React.createClass({
 				render: function () {
 					return (
@@ -42,6 +61,7 @@
 				}
 			});
 
+			// Main component that downloads the data from firebase and displays the list
 			var TrackList = React.createClass({
 				getInitialState: function () {
 					return {
@@ -59,6 +79,7 @@
 					this.firebaseRef.off();
 				},
 
+				// Depending on which route the user is viewing we query different data from firebase
 				getTrackList: function () {
 					this.firebaseRef = new Firebase('https://top5voter.firebaseio.com/tracks');
 
@@ -103,18 +124,22 @@
 								value = localStorage.getItem(key);
 
 							if (value === 'true') {
+								// Using the tracks Firebase key stored locally we pull it from
+								// Firebase
 								var trackRef = this.firebaseRef.child(key);
 
 								trackRef.once('value', function(snap) {
 									var item = snap.val();
-								
-									item['.key'] = snap.key();
+									
+									if (typeof item !== 'undefined' && item !== null) {
+										item['.key'] = snap.key();
 
-									item['localLiked'] = true;
+										item['localLiked'] = true;
 
-									_this.setState(function(oldState) {
-										return oldState.tracks.push(item);
-									});
+										_this.setState(function(oldState) {
+											return oldState.tracks.push(item);
+										});
+									}
 								});
 							}
 						}
@@ -131,14 +156,17 @@
 
 						var key = childSnapshot.key();
 						
-						item['.key'] = key;
+						if (typeof item !== 'undefined' && item !== null) {
+							item['.key'] = key;
 
-						item['localLiked'] = localStorage.getItem(key) ? true : false;
+							item['localLiked'] = localStorage.getItem(key) ? true : false;
 
-				        items.push(item);
+					        items.push(item);
+					    }
 
 					}.bind(this));
 
+					// Reverse the list so items are in decending order
 					items.reverse();
 
 					this.setState(function (prevState) {
@@ -148,6 +176,7 @@
 					});
 				},
 
+				// Update Firebase and local storage when someone likes or dislikes a track
 				toggleLike: function (key) {
 					var _this = this,
 						updateAmt = 0,
@@ -161,6 +190,7 @@
 
 					siteLikesRef = new Firebase('https://top5voter.firebaseio.com/tracks/' + key + '/likes');
 
+					// transaction(update function, callback)
 					siteLikesRef.transaction(function (current_value) {
 						var likes = current_value || 0;
 						return likes + updateAmt;
@@ -194,6 +224,7 @@
 					});
 				},
 
+				// Update the total number of tracks to download and get them
 				loadMore: function () {
 					this.firebaseRef.off();
 
@@ -218,12 +249,17 @@
 					return (
 						<div>
 							<ul className="tracklist">{ this.state.tracks.map(createTrack) }</ul>
-							<button className="more-button" onClick={ this.loadMore }>More</button>
+							<LoadMoreButton
+								numItems={ this.state.tracks.length } 
+								itemsPerPage={ this.state.tracksPerPage }
+								loadMore={ this.loadMore }
+							/>
 						</div>
 					);
 				}
 			});
-
+	
+			// Used to create variations of the TrackList component for each route
 			function buildTrackList (type) {
 				return React.createClass({
 					render: function () {
@@ -238,6 +274,7 @@
 			var UserList = buildTrackList('user');
 			var ArtistList = buildTrackList('artist');
 
+			// App level component with navigation and tracklist
 			var App = React.createClass({
 				render: function () {
 					return (
@@ -254,6 +291,7 @@
 				}
 			});
 
+			// React-Router
 			var Router = window.ReactRouter.Router;
 			var Route = window.ReactRouter.Route;
 			var IndexRoute = window.ReactRouter.IndexRoute;
