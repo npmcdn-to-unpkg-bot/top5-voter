@@ -1,0 +1,14 @@
+{
+    "rules": {
+        ".read": true,
+        "tracks": {
+          ".indexOn": ["likes","artist","user"],
+          ".write": "auth !== null",
+          "$track_id": {
+            "likes": {
+              ".write": true
+            }
+          }
+        }
+    }
+}
